@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/types';
+import BrandLogo from '../components/BrandLogo';
 import {COLORS} from '../theme/colors';
 import {FONTS} from '../theme/typography';
 import toast from '../components/Toast';
@@ -302,6 +303,7 @@ function OTPScreen({route, navigation}: Props) {
             style={styles.banner}
             resizeMode="cover"
           />
+          <BrandLogo />
         </Animated.View>
 
         <View style={styles.content}>

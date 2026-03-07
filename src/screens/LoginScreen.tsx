@@ -13,6 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {Lucide} from '@react-native-vector-icons/lucide';
+import BrandLogo from '../components/BrandLogo';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/types';
 import {COLORS} from '../theme/colors';
@@ -205,25 +207,26 @@ function LoginScreen({navigation}: Props) {
             style={styles.banner}
             resizeMode="cover"
           />
+          <BrandLogo />
         </Animated.View>
 
         <View style={styles.content}>
 
           {/* Title */}
-          <Animated.Text style={[styles.title, title.style]}>
-            AlZahrani{'\n'}Food Delivery
-          </Animated.Text>
+          {/* <Animated.Text style={[styles.title, title.style]}>
+            Welcome back 👋
+          </Animated.Text> */}
 
           {/* Subtitle */}
           <Animated.Text style={[styles.subtitle, subtitle.style]}>
-            Log in to your account
+            Log in to continue your order
           </Animated.Text>
 
           {/* Phone Row */}
           <Animated.View style={[styles.phoneRow, phoneRow.style]}>
             <TouchableOpacity style={styles.countryPicker} activeOpacity={0.7}>
               <Text style={styles.flagEmoji}>🇸🇦</Text>
-              <Text style={styles.chevron}>▾</Text>
+              <Lucide name="chevron-down" size={14} color="#2EA87E" />
             </TouchableOpacity>
             <View style={styles.verticalDivider} />
             <Text style={styles.countryCode}>+966</Text>
@@ -240,7 +243,7 @@ function LoginScreen({navigation}: Props) {
 
           {/* Password Row */}
           <Animated.View style={[styles.passwordRow, passwordRow.style]}>
-            <Text style={styles.lockIcon}>🔒</Text>
+            <Lucide name="lock" size={18} color="#2EA87E" />
             <TextInput
               value={password}
               onChangeText={setPassword}
@@ -253,10 +256,13 @@ function LoginScreen({navigation}: Props) {
             />
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => setShowPass(v => !v)}>
-              <Text style={styles.eyeToggle}>
-                {showPass ? 'Hide' : 'Show'}
-              </Text>
+              onPress={() => setShowPass(v => !v)}
+              hitSlop={8}>
+              <Lucide
+                name={showPass ? 'eye-off' : 'eye'}
+                size={18}
+                color="#2EA87E"
+              />
             </TouchableOpacity>
           </Animated.View>
 
@@ -376,7 +382,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   banner: {
-    width: '100%',
+    width: '100%', 
     height: 200,
     borderBottomLeftRadius: 50,
     borderBottomRightRadius: 50,
@@ -420,12 +426,6 @@ const styles = StyleSheet.create({
   flagEmoji: {
     fontSize: 24,
   },
-  chevron: {
-    fontSize: 11,
-    color: '#666',
-    marginLeft: 3,
-    marginTop: 1,
-  },
   verticalDivider: {
     width: 1,
     height: 28,
@@ -459,20 +459,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
     gap: 10,
   },
-  lockIcon: {
-    fontSize: 16,
-  },
   passwordInput: {
     flex: 1,
     fontSize: 15,
     color: '#1A1A1A',
     ...FONTS.regular,
     padding: 0,
-  },
-  eyeToggle: {
-    fontSize: 13,
-    color: COLORS.brandPrimary,
-    ...FONTS.medium,
   },
 
   /* Forgot */

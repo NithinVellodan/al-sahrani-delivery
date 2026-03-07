@@ -1,7 +1,8 @@
 /**
  * Tajvi-style gold color palette for food ordering app
  */
-export const COLORS = {
+  export const COLORS = {
+    mainColor: '#1C6AA1',
   // Primary gold palette (Tajvi)
   gold: '#7A5C2E',
   softGold: '#E9B95F',

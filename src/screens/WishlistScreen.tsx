@@ -1,5 +1,6 @@
-import React, {useState} from 'react';
+import React, {useState, useRef} from 'react';
 import {
+  Animated,
   FlatList,
   Image,
   Pressable,
@@ -242,32 +243,132 @@ function EmptyState({onBrowse}: {onBrowse: () => void}) {
   );
 }
 
-// ─── Screen ───────────────────────────────────────────────────────────────────
+// ─── Filter Tab Bar ───────────────────────────────────────────────────────────
 
-const FILTERS = ['All', 'Veg', 'Non-Veg', 'Top Rated'];
+const FILTERS: {key: string; label: string; icon: 'layout-grid' | 'leaf' | 'flame' | 'star'}[] = [
+  {key: 'All',       label: 'All',       icon: 'layout-grid'},
+  {key: 'Veg',       label: 'Veg',       icon: 'leaf'},
+  {key: 'Non-Veg',   label: 'Non-Veg',   icon: 'flame'},
+  {key: 'Top Rated', label: 'Top Rated', icon: 'star'},
+];
+
+const SORT_OPTIONS = ['Relevance', 'Price: Low–High', 'Price: High–Low', 'Rating'];
+
+function FilterBar({
+  active,
+  onSelect,
+}: {
+  active: string;
+  onSelect: (k: string) => void;
+}) {
+  const scrollRef = useRef<ScrollView>(null);
+  return (
+    <ScrollView
+      ref={scrollRef}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={s.filterRow}
+      bounces={false}>
+      {FILTERS.map(f => {
+        const isActive = f.key === active;
+        const iconColor = isActive ? '#2EA87E' : '#999';
+        return (
+          <Pressable
+            key={f.key}
+            style={[s.chip, isActive && s.chipActive]}
+            onPress={() => onSelect(f.key)}>
+            <Lucide name={f.icon} size={13} color={iconColor} />
+            <Text style={[s.chipTxt, isActive && s.chipTxtActive]}>
+              {f.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
+function SortSheet({
+  visible,
+  active,
+  onSelect,
+  onClose,
+}: {
+  visible: boolean;
+  active: string;
+  onSelect: (s: string) => void;
+  onClose: () => void;
+}) {
+  if (!visible) return null;
+  return (
+    <Pressable style={s.sortOverlay} onPress={onClose}>
+      <View style={s.sortSheet}>
+        <View style={s.sortHandle} />
+        <Text style={s.sortTitle}>Sort by</Text>
+        {SORT_OPTIONS.map(opt => (
+          <Pressable
+            key={opt}
+            style={s.sortRow}
+            onPress={() => {
+              onSelect(opt);
+              onClose();
+            }}>
+            <Text style={[s.sortRowTxt, active === opt && s.sortRowActive]}>
+              {opt}
+            </Text>
+            {active === opt && (
+              <Lucide name="check" size={16} color="#2EA87E" />
+            )}
+          </Pressable>
+        ))}
+      </View>
+    </Pressable>
+  );
+}
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function WishlistScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const [items, setItems] = useState<WishItem[]>(INITIAL_ITEMS);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [activeSort, setActiveSort] = useState('Relevance');
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortAnim = useRef(new Animated.Value(0)).current;
 
-  const filtered = items.filter(item => {
-    if (activeFilter === 'Veg') return item.isVeg;
-    if (activeFilter === 'Non-Veg') return !item.isVeg;
-    if (activeFilter === 'Top Rated') return item.rating >= 4.5;
-    return true;
-  });
+  const openSort = () => {
+    setSortOpen(true);
+    Animated.spring(sortAnim, {toValue: 1, useNativeDriver: true}).start();
+  };
+  const closeSort = () => {
+    setSortOpen(false);
+  };
+
+  const filtered = items
+    .filter(item => {
+      if (activeFilter === 'Veg') return item.isVeg;
+      if (activeFilter === 'Non-Veg') return !item.isVeg;
+      if (activeFilter === 'Top Rated') return item.rating >= 4.5;
+      return true;
+    })
+    .sort((a, b) => {
+      if (activeSort === 'Rating') return b.rating - a.rating;
+      if (activeSort === 'Price: Low–High')
+        return parseInt(a.price.replace(/\D/g, ''), 10) - parseInt(b.price.replace(/\D/g, ''), 10);
+      if (activeSort === 'Price: High–Low')
+        return parseInt(b.price.replace(/\D/g, ''), 10) - parseInt(a.price.replace(/\D/g, ''), 10);
+      return 0;
+    });
 
   const handleRemove = (id: string) =>
     setItems(prev => prev.filter(i => i.id !== id));
 
-  const handleAddToCart = (_item: WishItem) =>
-    navigation.navigate('Cart');
+  const handleAddToCart = (_item: WishItem) => navigation.navigate('Cart');
 
   return (
     <View style={[s.root, {paddingTop: insets.top}]}>
-      {/* Header */}
+      {/* ── Header ── */}
       <View style={s.header}>
         <View>
           <Text style={s.headerTitle}>Favourites</Text>
@@ -277,28 +378,31 @@ export default function WishlistScreen() {
           style={s.clearBtn}
           onPress={() => setItems([])}
           hitSlop={8}>
+          <Lucide name="trash-2" size={14} color={COLORS.textSecondary} />
           <Text style={s.clearTxt}>Clear all</Text>
         </Pressable>
       </View>
 
-      {/* Filter chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={s.filterRow}>
-        {FILTERS.map(f => (
-          <Pressable
-            key={f}
-            style={[s.chip, activeFilter === f && s.chipActive]}
-            onPress={() => setActiveFilter(f)}>
-            <Text style={[s.chipTxt, activeFilter === f && s.chipTxtActive]}>
-              {f}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      {/* ── Filter + Sort bar ── */}
+      <View style={s.controlBar}>
+        <FilterBar active={activeFilter} onSelect={setActiveFilter} />
+        <Pressable style={s.sortBtn} onPress={openSort}>
+          <Lucide name="arrow-up-down" size={14} color={COLORS.textPrimary} />
+          <Text style={s.sortBtnTxt}>Sort</Text>
+        </Pressable>
+      </View>
 
-      {/* List */}
+      {/* ── Active sort label ── */}
+      {activeSort !== 'Relevance' && (
+        <View style={s.activeSortBanner}>
+          <Text style={s.activeSortTxt}>Sorted by: {activeSort}</Text>
+          <Pressable onPress={() => setActiveSort('Relevance')} hitSlop={8}>
+            <Lucide name="x" size={14} color="#2EA87E" />
+          </Pressable>
+        </View>
+      )}
+
+      {/* ── List / Empty ── */}
       {filtered.length === 0 ? (
         <EmptyState onBrowse={() => navigation.navigate('MainTabs')} />
       ) : (
@@ -321,6 +425,14 @@ export default function WishlistScreen() {
           )}
         />
       )}
+
+      {/* ── Sort sheet ── */}
+      <SortSheet
+        visible={sortOpen}
+        active={activeSort}
+        onSelect={setActiveSort}
+        onClose={closeSort}
+      />
     </View>
   );
 }
@@ -354,12 +466,16 @@ const s = StyleSheet.create({
     marginTop: 2,
   },
   clearBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E8E8E8',
     marginTop: 4,
+    backgroundColor: '#FAFAFA',
   },
   clearTxt: {
     fontSize: 12,
@@ -367,23 +483,34 @@ const s = StyleSheet.create({
     color: COLORS.textSecondary,
   },
 
-  // Filters
-  filterRow: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 8,
+  // Control bar (filters + sort)
+  controlBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: COLORS.white,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#EBEBEB',
+  },
+  filterRow: {
+    flex: 1,
+    paddingLeft: 14,
+    paddingRight: 6,
+    paddingVertical: 10,
+    gap: 8,
   },
   chip: {
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
     backgroundColor: '#F3F3F3',
     borderWidth: 1,
-    borderColor: '#EBEBEB',
+    borderColor: '#E8E8E8',
   },
   chipActive: {
-    backgroundColor: '#2EA87E',
+    backgroundColor: '#E8F7F1',
     borderColor: '#2EA87E',
   },
   chipTxt: {
@@ -392,7 +519,85 @@ const s = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   chipTxtActive: {
-    color: '#fff',
+    color: '#2EA87E',
+  },
+  sortBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderLeftColor: '#EBEBEB',
+  },
+  sortBtnTxt: {
+    fontSize: 13,
+    ...FONTS.medium,
+    color: COLORS.textPrimary,
+  },
+
+  // Active sort banner
+  activeSortBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    backgroundColor: '#E8F7F1',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#B8E8D4',
+  },
+  activeSortTxt: {
+    fontSize: 12,
+    ...FONTS.medium,
+    color: '#2EA87E',
+  },
+
+  // Sort sheet
+  sortOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+    zIndex: 99,
+  },
+  sortSheet: {
+    backgroundColor: COLORS.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 32,
+    paddingTop: 12,
+  },
+  sortHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#DDD',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  sortTitle: {
+    fontSize: 16,
+    ...FONTS.bold,
+    color: COLORS.textPrimary,
+    marginBottom: 12,
+  },
+  sortRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#F0F0F0',
+  },
+  sortRowTxt: {
+    fontSize: 14,
+    ...FONTS.regular,
+    color: COLORS.textPrimary,
+  },
+  sortRowActive: {
+    ...FONTS.bold,
+    color: '#2EA87E',
   },
 
   // Grid

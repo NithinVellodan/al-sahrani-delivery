@@ -17,6 +17,7 @@ import OrdersScreen from '../screens/OrdersScreen';
 import AccountScreen from '../screens/AccountScreen';
 import WishlistScreen from '../screens/WishlistScreen';
 import CartScreen from '../screens/CartScreen';
+import OrderSuccessScreen from '../screens/OrderSuccessScreen';
 import SearchScreen from '../screens/SearchScreen';
 import type {BottomTabParamList, RootStackParamList} from './types';
 import {COLORS} from '../theme/colors';
@@ -132,6 +133,11 @@ function AppNavigator() {
       <Stack.Screen name="MainTabs" component={MainTabs} />
       <Stack.Screen name="Wishlist" component={WishlistScreen} />
       <Stack.Screen name="Cart" component={CartScreen} />
+      <Stack.Screen
+        name="OrderSuccess"
+        component={OrderSuccessScreen}
+        options={{animation: 'fade'}}
+      />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen
         name="ProductDetail"

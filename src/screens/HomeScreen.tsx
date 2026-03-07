@@ -294,15 +294,9 @@ function HomeScreen() {
   const recRows = chunk(RECOMMENDED, 2);
 
   return (
-    <ScrollView
-      style={styles.root}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={[
-        styles.container,
-        {paddingBottom: insets.bottom + 24},
-      ]}>
-      {/* ── Header ── */}
-      <View style={[styles.header, {paddingTop: insets.top + 16}]}>
+    <View style={[styles.root, {paddingTop: insets.top}]}>
+      {/* ── Fixed Header ── */}
+      <View style={styles.header}>
         {/* Row 1: Location + icons */}
         <View style={styles.headerTopRow}>
           <Pressable
@@ -325,12 +319,6 @@ function HomeScreen() {
               hitSlop={8}>
               <Lucide name="shopping-bag" size={20} color={COLORS.textPrimary} />
             </Pressable>
-            {/* <Pressable
-              style={styles.avatar}
-              onPress={() => navigation.navigate('MainTabs')}
-              hitSlop={8}>
-              <Text style={styles.avatarLetter}>A</Text>
-            </Pressable> */}
           </View>
         </View>
 
@@ -350,6 +338,14 @@ function HomeScreen() {
           </Pressable>
         </View>
       </View>
+
+      <ScrollView
+        style={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.container,
+          {paddingBottom: insets.bottom + 24},
+        ]}>
 
       {/* ── Auto-play Banner Carousel ── */}
       <View>
@@ -637,7 +633,8 @@ function HomeScreen() {
           style={styles.promoImg}
         />
       </Pressable>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -645,22 +642,25 @@ function HomeScreen() {
 
 const styles = StyleSheet.create({
   root: {flex: 1, backgroundColor: '#F7F7F7'},
+  scroll: {flex: 1},
   container: {},
 
-  // Header
+  // Header (fixed at top)
   header: {
     flexDirection: 'column',
     paddingHorizontal: 16,
+    paddingTop: 14,
     paddingBottom: 14,
     backgroundColor: COLORS.white,
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#E8E8E8',
-    elevation: 4,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     shadowOffset: {width: 0, height: 3},
+    zIndex: 10,
   },
   headerTopRow: {
     flexDirection: 'row',

@@ -10,6 +10,7 @@ export type RootStackParamList = {
   MainTabs: undefined;
   Wishlist: undefined;
   Cart: undefined;
+  OrderSuccess: undefined;
   Search: {query?: string} | undefined;
   ProductDetail: {
     id?: string;

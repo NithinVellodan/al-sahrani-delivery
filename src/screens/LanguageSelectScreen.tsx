@@ -9,8 +9,9 @@ import {
   Text,
   View,
   Alert,
-  useWindowDimensions,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {Lucide} from '@react-native-vector-icons/lucide';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/types';
 import {COLORS} from '../theme/colors';
@@ -19,144 +20,306 @@ import {setAppLanguage} from '../utils/storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LanguageSelect'>;
 
-const LIGHT_GOLD = '#fff'; // light gold for top background
-// const LIGHT_GOLD = '#1c6aa1'; // light gold for top background
+const TEAL = '#2EA87E';
 
-function LanguageSelectScreen({navigation}: Props) {
-  const {height} = useWindowDimensions();
-  const topSectionHeight = height * 0.70;
+const LANGUAGES = [
+  {
+    code: 'en' as const,
+    label: 'English',
+    native: 'English',
+    flag: '🇬🇧',
+    dir: 'LTR',
+  },
+  {
+    code: 'ar' as const,
+    label: 'Arabic',
+    native: 'العربية',
+    flag: '🇸🇦',
+    dir: 'RTL',
+  },
+];
 
-  const scale = useRef(new Animated.Value(0.6)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(30)).current;
+export default function LanguageSelectScreen({navigation}: Props) {
+  const insets = useSafeAreaInsets();
+
+  // Entrance animations
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0.8)).current;
+  const sheetY = useRef(new Animated.Value(60)).current;
+  const sheetOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 700,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }),
-      Animated.spring(scale, {
-        toValue: 1,
-        friction: 5,
-        tension: 60,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 600,
-        easing: Easing.out(Easing.back(1.5)),
-        useNativeDriver: true,
-      }),
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(logoOpacity, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.spring(logoScale, {
+          toValue: 1,
+          friction: 6,
+          tension: 70,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.timing(sheetY, {
+          toValue: 0,
+          duration: 500,
+          easing: Easing.out(Easing.back(1.2)),
+          useNativeDriver: true,
+        }),
+        Animated.timing(sheetOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]),
     ]).start();
-  }, [opacity, scale, translateY]);
+  }, [logoOpacity, logoScale, sheetY, sheetOpacity]);
 
   const selectLanguage = async (language: 'en' | 'ar') => {
     await setAppLanguage(language);
-
     if (language === 'ar' && !I18nManager.isRTL) {
       Alert.alert(
         'Restart Required',
-        'Arabic layout will apply after app restart. Continuing with saved language.',
+        'Arabic layout will apply after the app restarts.',
       );
     }
     navigation.replace('Onboarding');
   };
 
   return (
-    <View style={styles.container}>
-      {/* Top section: light gold background + app icon */}
-      <View style={[styles.topSection, {height: topSectionHeight}]}>
-        <Animated.View
-          style={{opacity, transform: [{scale}, {translateY}]}}>
-          <Image
-            source={require('../images/latest-logo.png')}
-            style={styles.appIcon}
-            resizeMode="contain"
-          />
-        </Animated.View>
-      </View>
+    <View style={[styles.root, {paddingTop: insets.top}]}>
+      {/* ── Background decoration ── */}
+      <View style={styles.topBlob} />
+      <View style={styles.bottomBlob} />
 
-      {/* Bottom modal sheet */}
-      <View style={styles.modalSheet}>
-        <View style={styles.dragHandle} />
-        <Text style={styles.modalTitle}>Select Your Language</Text>
+      {/* ── Logo area ── */}
+      <Animated.View
+        style={[
+          styles.logoSection,
+          {opacity: logoOpacity, transform: [{scale: logoScale}]},
+        ]}>
+        <Image
+          source={require('../images/latest-logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.tagline}>Fresh. Fast. Saudi.</Text>
+      </Animated.View>
 
-        <Pressable
-          style={styles.languageRow}
-          onPress={() => selectLanguage('en')}
-          android_ripple={{color: COLORS.greyClr}}>
-          <Text style={styles.languageLabel}>English</Text>
-        </Pressable>
+      {/* ── Language card ── */}
+      <Animated.View
+        style={[
+          styles.card,
+          {opacity: sheetOpacity, transform: [{translateY: sheetY}]},
+        ]}>
+        {/* Globe badge */}
+        <View style={styles.globeBadge}>
+          <Lucide name="globe" size={20} color={TEAL} />
+        </View>
 
-        <View style={styles.separator} />
+        <Text style={styles.cardTitle}>Choose your language</Text>
+        <Text style={styles.cardSub}>
+          You can change this anytime from your profile.
+        </Text>
 
-        <Pressable
-          style={styles.languageRow}
-          onPress={() => selectLanguage('ar')}
-          android_ripple={{color: COLORS.greyClr}}>
-          <Text style={styles.languageLabel}>العربية</Text>
-        </Pressable>
-      </View>
+        <View style={styles.optionList}>
+          {LANGUAGES.map((lang, idx) => (
+            <React.Fragment key={lang.code}>
+              {idx > 0 && <View style={styles.divider} />}
+              <Pressable
+                style={({pressed}) => [
+                  styles.optionRow,
+                  pressed && styles.optionPressed,
+                ]}
+                onPress={() => selectLanguage(lang.code)}
+                android_ripple={{color: '#E8F7F1'}}>
+                {/* Flag circle */}
+                <View style={styles.flagWrap}>
+                  <Text style={styles.flagEmoji}>{lang.flag}</Text>
+                </View>
+
+                {/* Text */}
+                <View style={styles.optionTexts}>
+                  <Text style={styles.optionLabel}>{lang.native}</Text>
+                  <Text style={styles.optionSub}>
+                    {lang.label} · {lang.dir}
+                  </Text>
+                </View>
+
+                {/* Arrow */}
+                <View style={styles.arrowWrap}>
+                  <Lucide name="chevron-right" size={18} color={COLORS.mediumGray} />
+                </View>
+              </Pressable>
+            </React.Fragment>
+          ))}
+        </View>
+      </Animated.View>
+
+      {/* ── Footer ── */}
+      <Text style={[styles.footer, {marginBottom: insets.bottom + 16}]}>
+        Al Zahrani Logistics · Riyadh, KSA
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    backgroundColor: LIGHT_GOLD,
-  },
-  topSection: {
-    backgroundColor: LIGHT_GOLD,
+    backgroundColor: '#F7F9F8',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  appIcon: {
-    width: 160,
-    height: 160,
+
+  // Decorative blobs
+  topBlob: {
+    position: 'absolute',
+    top: -80,
+    right: -60,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: '#D4F0E4',
+    opacity: 0.5,
   },
-  modalSheet: {
-    flex: 1,
-    backgroundColor: COLORS.black,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 34,
+  bottomBlob: {
+    position: 'absolute',
+    bottom: -60,
+    left: -50,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: '#D4F0E4',
+    opacity: 0.35,
   },
-  dragHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: COLORS.lightGrey2,
-    alignSelf: 'center',
-    marginBottom: 20,
+
+  // Logo
+  logoSection: {
+    alignItems: 'center',
+    marginBottom: 36,
   },
-  modalTitle: {
-    fontSize: 22,
-    ...FONTS.bold,
-    color: COLORS.white,
-    marginBottom: 16,
+  logo: {
+    width: 180,
+    height: 72,
   },
-  languageRow: {
-    paddingVertical: 18,
-    paddingHorizontal: 4,
-    alignSelf: 'stretch',
-  },
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: COLORS.lightGrey2,
-  },
-  languageLabel: {
-    fontSize: 18,
+  tagline: {
+    marginTop: 10,
+    fontSize: 13,
     ...FONTS.medium,
-    color: COLORS.white,
-    textAlign: 'left',
-    writingDirection: 'ltr',
+    color: COLORS.mediumGray,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+
+  // Card
+  card: {
+    width: '88%',
+    backgroundColor: COLORS.white,
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 8,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: {width: 0, height: 6},
+  },
+  globeBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E8F7F1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: 14,
+  },
+  cardTitle: {
+    fontSize: 20,
+    ...FONTS.bold,
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+  },
+  cardSub: {
+    fontSize: 13,
+    ...FONTS.regular,
+    color: COLORS.mediumGray,
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 20,
+    lineHeight: 19,
+  },
+
+  // Options
+  optionList: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#EBEBEB',
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#EBEBEB',
+  },
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    backgroundColor: COLORS.white,
+    gap: 14,
+  },
+  optionPressed: {
+    backgroundColor: '#F5FDFB',
+  },
+  flagWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F3F3F3',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  flagEmoji: {
+    fontSize: 24,
+  },
+  optionTexts: {
+    flex: 1,
+  },
+  optionLabel: {
+    fontSize: 16,
+    ...FONTS.bold,
+    color: COLORS.textPrimary,
+  },
+  optionSub: {
+    fontSize: 12,
+    ...FONTS.regular,
+    color: COLORS.mediumGray,
+    marginTop: 2,
+  },
+  arrowWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#F3F3F3',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Footer
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    fontSize: 11,
+    ...FONTS.regular,
+    color: COLORS.mediumGray,
+    letterSpacing: 0.4,
   },
 });
-
-export default LanguageSelectScreen;
