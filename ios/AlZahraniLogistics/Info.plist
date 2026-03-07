@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>AlZahraniLogistics</string>
+	<string>AlZahrani</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,14 +26,13 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-	  <!-- Do not change NSAllowsArbitraryLoads to true, or you will risk app rejection! -->
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -48,5 +47,23 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Lucide.ttf</string>
+		<string>CormorantGaramond-SemiBold.ttf</string>
+		<string>FontAwesome.ttf</string>
+		<string>Fustat-Bold.ttf</string>
+		<string>Fustat-Medium.ttf</string>
+		<string>Fustat-Regular.ttf</string>
+		<string>Fustat-SemiBold.ttf</string>
+		<string>Ionicons.ttf</string>
+		<string>Lustria-Regular.ttf</string>
+		<string>MaterialIcons.ttf</string>
+		<string>Poppins-Bold.ttf</string>
+		<string>Poppins-Italic.ttf</string>
+		<string>Poppins-LightItalic.ttf</string>
+		<string>Poppins-Medium.ttf</string>
+		<string>Poppins-Regular.ttf</string>
+	</array>
 </dict>
 </plist>

@@ -75,6 +75,12 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.alzahranilogistics"
+    sourceSets {
+        main {
+            // Ensure RN Vector Icons font files are packaged into the APK under assets/fonts/
+            assets.srcDirs += file("$buildDir/generated/rnvi-fonts")
+        }
+    }
     defaultConfig {
         applicationId "com.alzahranilogistics"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -114,5 +120,22 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+def rnviFontsOutputDir = file("$buildDir/generated/rnvi-fonts/fonts")
+tasks.register("copyRnviFonts", Copy) {
+    // Copy all bundled icon fonts from @react-native-vector-icons/* packages
+    from(file("../../node_modules/@react-native-vector-icons")) {
+        include("*/fonts/*.ttf")
+        // Avoid duplicate with manually-bundled font in src/main/assets/fonts
+        exclude("*/fonts/Lucide.ttf")
+        eachFile { details ->
+            // Flatten into assets/fonts/<Font>.ttf
+            details.path = details.name
+        }
+        includeEmptyDirs = false
+    }
+    into(rnviFontsOutputDir)
+}
+preBuild.dependsOn("copyRnviFonts")
 
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)

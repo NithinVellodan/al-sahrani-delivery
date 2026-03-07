@@ -1,0 +1,61 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/Fustat-Medium.ttf",
+      "sha1": "ad9ebd3954fa7bb468798bd6299a5925eb5da998"
+    },
+    {
+      "path": "assets/fonts/Fustat-Regular.ttf",
+      "sha1": "30bf23817bbf608374e79dde7122a68841484d10"
+    },
+    {
+      "path": "assets/fonts/Poppins-Medium.ttf",
+      "sha1": "283f21b44efbdbf276ba802be2d949a36bbc4233"
+    },
+    {
+      "path": "assets/fonts/Ionicons.ttf",
+      "sha1": "86e07c3d974eb09099e6e5a9b3b8310303cf0feb"
+    },
+    {
+      "path": "assets/fonts/CormorantGaramond-SemiBold.ttf",
+      "sha1": "3946cea5d2f369766d54573fdae34cfcebfe7126"
+    },
+    {
+      "path": "assets/fonts/FontAwesome.ttf",
+      "sha1": "13b1eab65a983c7a73bc7997c479d66943f7c6cb"
+    },
+    {
+      "path": "assets/fonts/Fustat-SemiBold.ttf",
+      "sha1": "657024e8adca847560fbc6177c737c7e65b60410"
+    },
+    {
+      "path": "assets/fonts/Lustria-Regular.ttf",
+      "sha1": "1092ed608df50193520a6aae7671cc23dc6bf71a"
+    },
+    {
+      "path": "assets/fonts/Poppins-Regular.ttf",
+      "sha1": "fdd3002e7d814ee47c1c1b8487c72c6bbb3a2d00"
+    },
+    {
+      "path": "assets/fonts/Poppins-LightItalic.ttf",
+      "sha1": "f76102b361e705751a83b7b22fe954daf1f27dd4"
+    },
+    {
+      "path": "assets/fonts/Poppins-Bold.ttf",
+      "sha1": "875cf0cecd647bcf22e79d633d868c1b1ec98dfa"
+    },
+    {
+      "path": "assets/fonts/Fustat-Bold.ttf",
+      "sha1": "98c51daa47666d49321461ea8e1914d10e574dda"
+    },
+    {
+      "path": "assets/fonts/Poppins-Italic.ttf",
+      "sha1": "e2bfcd56016c3c915221ef1c5fc1a17b0776eb91"
+    },
+    {
+      "path": "assets/fonts/MaterialIcons.ttf",
+      "sha1": "7e02c3f005532ff4d24148567c84089756a7848a"
+    }
+  ]
+}
