@@ -7,21 +7,38 @@ import { COLORS } from '../theme/colors';
  * Al Zahrani Food Delivery — frosted logo pill.
  * Drop inside any Animated.View / banner wrapper with position:'relative'.
  */
-export default function BrandLogo() {
-  return (
-    <View style={s.pill}>
-      <Image
-        source={require('../images/logo-no-background.png')}
-        style={s.logoImg}
-        resizeMode="contain"
-      />
-      <View style={s.textBlock}>
-        <Text style={s.wordAl}>Al</Text>
-        <Text style={s.wordZahrani}>Zahrani</Text>
-      </View>
+const LogoContent = ({showTag}: {showTag: boolean}) => (
+  <>
+    <Image
+      source={require('../images/logo-no-background.png')}
+      style={s.logoImg}
+      resizeMode="contain"
+    />
+    <View style={s.textBlock}>
+      <Text style={s.wordAl}>Al</Text>
+      <Text style={s.wordZahrani}>Zahrani</Text>
+    </View>
+    {showTag && (
       <View style={s.tagWrap}>
         <Text style={s.tag}>FOOD DELIVERY</Text>
       </View>
+    )}
+  </>
+);
+
+export default function BrandLogo({
+  noContainer,
+  showTag = true,
+}: {
+  noContainer?: boolean;
+  showTag?: boolean;
+}) {
+  if (noContainer) {
+    return <LogoContent showTag={showTag} />;
+  }
+  return (
+    <View style={s.pill}>
+      <LogoContent showTag={showTag} />
     </View>
   );
 }
@@ -70,7 +87,7 @@ const s = StyleSheet.create({
   tagWrap: {
     borderLeftWidth: 1.5,
     borderLeftColor: '#E0E0E0',
-    paddingLeft: 10,
+    paddingLeft: 4,
   },
   tag: {
     fontSize: 9,

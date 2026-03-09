@@ -419,7 +419,10 @@ export default function CartScreen() {
         </View>
         <Pressable
           style={s.placeOrderBtn}
-          onPress={() => navigation.navigate('OrderSuccess')}>
+          // onPress={() => navigation.navigate('OrderSuccess')}
+
+
+          >
           <View>
             <Text style={s.placeOrderTotal}>SAR {total}</Text>
             <Text style={s.placeOrderTotalLabel}>TOTAL</Text>

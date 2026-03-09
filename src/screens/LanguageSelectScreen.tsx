@@ -9,18 +9,20 @@ import {
   Text,
   View,
   Alert,
+  Dimensions,
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Lucide} from '@react-native-vector-icons/lucide';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../navigation/types';
-import {COLORS} from '../theme/colors';
 import {FONTS} from '../theme/typography';
 import {setAppLanguage} from '../utils/storage';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'LanguageSelect'>;
 
 const TEAL = '#2EA87E';
+const TEAL_LIGHT = '#E8F7F1';
+const SCREEN_W = Dimensions.get('window').width;
 
 const LANGUAGES = [
   {
@@ -29,6 +31,7 @@ const LANGUAGES = [
     native: 'English',
     flag: '🇬🇧',
     dir: 'LTR',
+    hint: 'Left to right',
   },
   {
     code: 'ar' as const,
@@ -36,49 +39,40 @@ const LANGUAGES = [
     native: 'العربية',
     flag: '🇸🇦',
     dir: 'RTL',
+    hint: 'Right to left',
   },
 ];
 
 export default function LanguageSelectScreen({navigation}: Props) {
   const insets = useSafeAreaInsets();
 
-  // Entrance animations
-  const logoOpacity = useRef(new Animated.Value(0)).current;
-  const logoScale = useRef(new Animated.Value(0.8)).current;
-  const sheetY = useRef(new Animated.Value(60)).current;
-  const sheetOpacity = useRef(new Animated.Value(0)).current;
+  // Hero section animations
+  const heroOpacity = useRef(new Animated.Value(0)).current;
+  const heroY = useRef(new Animated.Value(-24)).current;
+  const logoScale = useRef(new Animated.Value(0.88)).current;
+
+  // Card animations (staggered)
+  const card1 = useRef(new Animated.Value(0)).current;
+  const card2 = useRef(new Animated.Value(0)).current;
+  const footerOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.sequence([
+      // Hero fades + slides down
       Animated.parallel([
-        Animated.timing(logoOpacity, {
-          toValue: 1,
-          duration: 600,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.spring(logoScale, {
-          toValue: 1,
-          friction: 6,
-          tension: 70,
-          useNativeDriver: true,
-        }),
+        Animated.timing(heroOpacity, {toValue: 1, duration: 500, easing: Easing.out(Easing.ease), useNativeDriver: true}),
+        Animated.timing(heroY, {toValue: 0, duration: 500, easing: Easing.out(Easing.ease), useNativeDriver: true}),
+        Animated.spring(logoScale, {toValue: 1, friction: 7, tension: 60, useNativeDriver: true}),
       ]),
-      Animated.parallel([
-        Animated.timing(sheetY, {
-          toValue: 0,
-          duration: 500,
-          easing: Easing.out(Easing.back(1.2)),
-          useNativeDriver: true,
-        }),
-        Animated.timing(sheetOpacity, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
+      // Cards stagger in
+      Animated.stagger(100, [
+        Animated.timing(card1, {toValue: 1, duration: 380, easing: Easing.out(Easing.ease), useNativeDriver: true}),
+        Animated.timing(card2, {toValue: 1, duration: 380, easing: Easing.out(Easing.ease), useNativeDriver: true}),
       ]),
+      Animated.timing(footerOpacity, {toValue: 1, duration: 300, useNativeDriver: true}),
     ]).start();
-  }, [logoOpacity, logoScale, sheetY, sheetOpacity]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const selectLanguage = async (language: 'en' | 'ar') => {
     await setAppLanguage(language);
@@ -91,80 +85,102 @@ export default function LanguageSelectScreen({navigation}: Props) {
     navigation.replace('Onboarding');
   };
 
+  const cardAnims = [card1, card2];
+
   return (
     <View style={[styles.root, {paddingTop: insets.top}]}>
-      {/* ── Background decoration ── */}
-      <View style={styles.topBlob} />
-      <View style={styles.bottomBlob} />
 
-      {/* ── Logo area ── */}
-      <Animated.View
-        style={[
-          styles.logoSection,
-          {opacity: logoOpacity, transform: [{scale: logoScale}]},
-        ]}>
-        <Image
-          source={require('../images/latest-logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.tagline}>Fresh. Fast. Saudi.</Text>
-      </Animated.View>
+      {/* ── Teal hero panel ── */}
+      <View style={styles.hero}>
+        {/* Soft decorative rings */}
+        <View style={styles.ring1} />
+        <View style={styles.ring2} />
 
-      {/* ── Language card ── */}
-      <Animated.View
-        style={[
-          styles.card,
-          {opacity: sheetOpacity, transform: [{translateY: sheetY}]},
-        ]}>
-        {/* Globe badge */}
-        <View style={styles.globeBadge}>
-          <Lucide name="globe" size={20} color={TEAL} />
+        <Animated.View
+          style={[
+            styles.heroContent,
+            {opacity: heroOpacity, transform: [{translateY: heroY}, {scale: logoScale}]},
+          ]}>
+          <Image
+            source={require('../images/logo-no-background.png')}
+            style={styles.logoImg}
+            resizeMode="contain"
+          />
+          <Text style={styles.brandName}>Al Zahrani</Text>
+          <View style={styles.tagPill}>
+            <Text style={styles.tagTxt}>FOOD DELIVERY</Text>
+          </View>
+        </Animated.View>
+      </View>
+
+      {/* ── Bottom sheet ── */}
+      <View style={[styles.sheet, {paddingBottom: insets.bottom + 24}]}>
+
+        {/* Drag handle */}
+        <View style={styles.handle} />
+
+        {/* Section label */}
+        <View style={styles.sectionRow}>
+          <View style={styles.globeBadge}>
+            <Lucide name="globe" size={16} color={TEAL} />
+          </View>
+          <View>
+            <Text style={styles.sheetTitle}>Choose Language</Text>
+            <Text style={styles.sheetSub}>Select your preferred language to continue</Text>
+          </View>
         </View>
 
-        <Text style={styles.cardTitle}>Choose your language</Text>
-        <Text style={styles.cardSub}>
-          You can change this anytime from your profile.
-        </Text>
-
+        {/* Language options */}
         <View style={styles.optionList}>
-          {LANGUAGES.map((lang, idx) => (
-            <React.Fragment key={lang.code}>
-              {idx > 0 && <View style={styles.divider} />}
-              <Pressable
-                style={({pressed}) => [
-                  styles.optionRow,
-                  pressed && styles.optionPressed,
-                ]}
-                onPress={() => selectLanguage(lang.code)}
-                android_ripple={{color: '#E8F7F1'}}>
-                {/* Flag circle */}
-                <View style={styles.flagWrap}>
-                  <Text style={styles.flagEmoji}>{lang.flag}</Text>
-                </View>
+          {LANGUAGES.map((lang, idx) => {
+            const anim = cardAnims[idx];
+            return (
+              <Animated.View
+                key={lang.code}
+                style={{
+                  opacity: anim,
+                  transform: [{translateY: anim.interpolate({inputRange: [0, 1], outputRange: [20, 0]})}],
+                }}>
+                {idx > 0 && <View style={styles.divider} />}
+                <Pressable
+                  style={({pressed}) => [
+                    styles.optionRow,
+                    pressed && styles.optionPressed,
+                  ]}
+                  onPress={() => selectLanguage(lang.code)}
+                  android_ripple={{color: TEAL_LIGHT}}>
 
-                {/* Text */}
-                <View style={styles.optionTexts}>
-                  <Text style={styles.optionLabel}>{lang.native}</Text>
-                  <Text style={styles.optionSub}>
-                    {lang.label} · {lang.dir}
-                  </Text>
-                </View>
+                  {/* Flag circle */}
+                  <View style={styles.flagWrap}>
+                    <Text style={styles.flagEmoji}>{lang.flag}</Text>
+                  </View>
 
-                {/* Arrow */}
-                <View style={styles.arrowWrap}>
-                  <Lucide name="chevron-right" size={18} color={COLORS.mediumGray} />
-                </View>
-              </Pressable>
-            </React.Fragment>
-          ))}
+                  {/* Labels */}
+                  <View style={styles.optionTexts}>
+                    <Text style={styles.optionNative}>{lang.native}</Text>
+                    <Text style={styles.optionMeta}>{lang.label} · {lang.hint}</Text>
+                  </View>
+
+                  {/* Direction badge + arrow */}
+                  <View style={styles.optionRight}>
+                    <View style={styles.dirBadge}>
+                      <Text style={styles.dirTxt}>{lang.dir}</Text>
+                    </View>
+                    <View style={styles.arrowWrap}>
+                      <Lucide name="chevron-right" size={16} color={TEAL} />
+                    </View>
+                  </View>
+                </Pressable>
+              </Animated.View>
+            );
+          })}
         </View>
-      </Animated.View>
 
-      {/* ── Footer ── */}
-      <Text style={[styles.footer, {marginBottom: insets.bottom + 16}]}>
-        Al Zahrani Logistics · Riyadh, KSA
-      </Text>
+        {/* Footer note */}
+        <Animated.Text style={[styles.footer, {opacity: footerOpacity}]}>
+          You can change this anytime from your Profile settings
+        </Animated.Text>
+      </View>
     </View>
   );
 }
@@ -172,154 +188,201 @@ export default function LanguageSelectScreen({navigation}: Props) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F7F9F8',
+    backgroundColor: TEAL,
+  },
+
+  // ── Hero (teal top half) ──────────────────────────────────────────────────
+  hero: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
-
-  // Decorative blobs
-  topBlob: {
+  ring1: {
     position: 'absolute',
-    top: -80,
-    right: -60,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: '#D4F0E4',
-    opacity: 0.5,
+    width: SCREEN_W * 1.4,
+    height: SCREEN_W * 1.4,
+    borderRadius: SCREEN_W * 0.7,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    top: -SCREEN_W * 0.55,
   },
-  bottomBlob: {
+  ring2: {
     position: 'absolute',
-    bottom: -60,
-    left: -50,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: '#D4F0E4',
-    opacity: 0.35,
+    width: SCREEN_W * 0.9,
+    height: SCREEN_W * 0.9,
+    borderRadius: SCREEN_W * 0.45,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.10)',
+    top: -SCREEN_W * 0.25,
+    right: -SCREEN_W * 0.2,
   },
-
-  // Logo
-  logoSection: {
+  heroContent: {
     alignItems: 'center',
-    marginBottom: 36,
   },
-  logo: {
-    width: 180,
-    height: 72,
+  logoImg: {
+    width: 160,
+    height: 64,
+    tintColor: '#fff',
   },
-  tagline: {
+  brandName: {
     marginTop: 10,
-    fontSize: 13,
-    ...FONTS.medium,
-    color: COLORS.mediumGray,
+    fontSize: 28,
+    ...FONTS.bold,
+    color: '#fff',
     letterSpacing: 1,
-    textTransform: 'uppercase',
+  },
+  tagPill: {
+    marginTop: 8,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+  },
+  tagTxt: {
+    fontSize: 11,
+    ...FONTS.bold,
+    color: '#fff',
+    letterSpacing: 2,
   },
 
-  // Card
-  card: {
-    width: '88%',
-    backgroundColor: COLORS.white,
-    borderRadius: 20,
+  // ── Bottom sheet (white) ─────────────────────────────────────────────────
+  sheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 8,
-    elevation: 6,
+    paddingTop: 12,
+    elevation: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: {width: 0, height: 6},
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    shadowOffset: {width: 0, height: -6},
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E0E0E0',
+    alignSelf: 'center',
+    marginBottom: 22,
+  },
+  sectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 20,
   },
   globeBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#E8F7F1',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: TEAL_LIGHT,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'center',
-    marginBottom: 14,
+    flexShrink: 0,
   },
-  cardTitle: {
-    fontSize: 20,
+  sheetTitle: {
+    fontSize: 18,
     ...FONTS.bold,
-    color: COLORS.textPrimary,
-    textAlign: 'center',
+    color: '#222',
   },
-  cardSub: {
-    fontSize: 13,
+  sheetSub: {
+    fontSize: 12,
     ...FONTS.regular,
-    color: COLORS.mediumGray,
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 20,
-    lineHeight: 19,
+    color: '#999',
+    marginTop: 2,
   },
 
-  // Options
+  // ── Language option cards ────────────────────────────────────────────────
   optionList: {
-    borderRadius: 14,
+    borderRadius: 16,
     overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#EBEBEB',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: {width: 0, height: 2},
+    backgroundColor: '#fff',
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: '#EBEBEB',
+    backgroundColor: '#F0F0F0',
+    marginHorizontal: 16,
   },
   optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 14,
-    backgroundColor: COLORS.white,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
     gap: 14,
   },
   optionPressed: {
     backgroundColor: '#F5FDFB',
   },
   flagWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F3F3F3',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F7F7F7',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#EBEBEB',
   },
   flagEmoji: {
-    fontSize: 24,
+    fontSize: 26,
   },
   optionTexts: {
     flex: 1,
   },
-  optionLabel: {
-    fontSize: 16,
+  optionNative: {
+    fontSize: 17,
     ...FONTS.bold,
-    color: COLORS.textPrimary,
+    color: '#222',
   },
-  optionSub: {
+  optionMeta: {
     fontSize: 12,
     ...FONTS.regular,
-    color: COLORS.mediumGray,
+    color: '#999',
     marginTop: 2,
   },
+  optionRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dirBadge: {
+    backgroundColor: TEAL_LIGHT,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  dirTxt: {
+    fontSize: 10,
+    ...FONTS.bold,
+    color: TEAL,
+    letterSpacing: 0.5,
+  },
   arrowWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#F3F3F3',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: TEAL_LIGHT,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  // Footer
+  // ── Footer ──────────────────────────────────────────────────────────────
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    fontSize: 11,
+    marginTop: 20,
+    fontSize: 12,
     ...FONTS.regular,
-    color: COLORS.mediumGray,
-    letterSpacing: 0.4,
+    color: '#BDBDBD',
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });

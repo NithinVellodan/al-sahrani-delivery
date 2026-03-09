@@ -1,8 +1,10 @@
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {
-  Alert,
+  Animated,
+  Easing,
   Image,
   Linking,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -67,6 +69,75 @@ function SectionHead({title}: {title: string}) {
   return <Text style={s.sectionHead}>{title}</Text>;
 }
 
+// ─── Logout Modal ─────────────────────────────────────────────────────────────
+function LogoutModal({
+  visible,
+  onCancel,
+  onConfirm,
+}: {
+  visible: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const scale   = useRef(new Animated.Value(0.85)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.spring(scale,   {toValue: 1, friction: 6, tension: 80, useNativeDriver: true}),
+        Animated.timing(opacity, {toValue: 1, duration: 220, easing: Easing.out(Easing.ease), useNativeDriver: true}),
+      ]).start();
+    } else {
+      scale.setValue(0.85);
+      opacity.setValue(0);
+    }
+  }, [visible, scale, opacity]);
+
+  return (
+    <Modal visible={visible} transparent animationType="none" onRequestClose={onCancel}>
+      <Pressable style={lm.overlay} onPress={onCancel}>
+        <Animated.View
+          style={[lm.card, {opacity, transform: [{scale}]}]}
+          onStartShouldSetResponder={() => true}>
+
+          {/* Icon */}
+          <View style={lm.iconWrap}>
+            <Lucide name="log-out" size={28} color={COLORS.danger} />
+          </View>
+
+          {/* Text */}
+          <Text style={lm.title}>Log out?</Text>
+          <Text style={lm.body}>
+            You'll need to sign in again to access your account and orders.
+          </Text>
+
+          {/* Divider */}
+          <View style={lm.divider} />
+
+          {/* Buttons */}
+          <View style={lm.btnRow}>
+            <Pressable
+              style={[lm.btn, lm.cancelBtn]}
+              onPress={onCancel}
+              android_ripple={{color: '#F0F0F0'}}>
+              <Text style={lm.cancelTxt}>Cancel</Text>
+            </Pressable>
+            <View style={lm.btnSep} />
+            <Pressable
+              style={[lm.btn, lm.confirmBtn]}
+              onPress={onConfirm}
+              android_ripple={{color: '#FFEBEE'}}>
+              <Lucide name="log-out" size={15} color={COLORS.danger} />
+              <Text style={lm.confirmTxt}>Log out</Text>
+            </Pressable>
+          </View>
+        </Animated.View>
+      </Pressable>
+    </Modal>
+  );
+}
+
 // ─── Service Card ─────────────────────────────────────────────────────────────
 function ServiceCard({icon, iconBg, iconColor, title, body}: {
   icon: LucideIconName; iconBg: string; iconColor: string;
@@ -108,29 +179,27 @@ export default function AccountScreen({navigation}: Props) {
   const insets = useSafeAreaInsets();
   const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [activeTab, setActiveTab] = useState<TabId>('profile');
+  const [showLogout, setShowLogout] = useState(false);
 
-  const logout = async () => {
-    Alert.alert('Log out', 'Are you sure you want to log out?', [
-      {text: 'Cancel', style: 'cancel'},
-      {
-        text: 'Log out',
-        style: 'destructive',
-        onPress: async () => {
-          await clearAuthToken();
-          navigation.getParent()?.reset({index: 0, routes: [{name: 'Login'}]});
-        },
-      },
-    ]);
+  const confirmLogout = async () => {
+    setShowLogout(false);
+    await clearAuthToken();
+    navigation.getParent()?.reset({index: 0, routes: [{name: 'Login'}]});
   };
 
   const TABS: {id: TabId; label: string; icon: LucideIconName}[] = [
-    {id: 'profile',  label: 'Profile',      icon: 'user'},
-    {id: 'services', label: 'Our Services', icon: 'briefcase'},
-    {id: 'about',    label: 'About Us',     icon: 'info'},
+    {id: 'profile',  label: 'Profile',   icon: 'user'},
+    {id: 'services', label: 'Services',  icon: 'briefcase'},
+    {id: 'about',    label: 'About Us',  icon: 'building-2'},
   ];
 
   return (
     <View style={[s.root, {paddingTop: insets.top}]}>
+      <LogoutModal
+        visible={showLogout}
+        onCancel={() => setShowLogout(false)}
+        onConfirm={confirmLogout}
+      />
       {/* ── User header (always visible) ── */}
       <View style={s.header}>
         <View style={s.avatarWrap}>
@@ -163,7 +232,7 @@ export default function AccountScreen({navigation}: Props) {
               key={tab.id}
               style={[s.tabItem, active && s.tabItemActive]}
               onPress={() => setActiveTab(tab.id)}>
-              <Lucide name={tab.icon} size={14} color={active ? TEAL : '#AAAAAA'} />
+              <Lucide name={tab.icon} size={18} color={active ? TEAL : '#AAAAAA'} />
               <Text style={[s.tabLabel, active && s.tabLabelActive]}>{tab.label}</Text>
               {active && <View style={s.tabUnderline} />}
             </Pressable>
@@ -222,7 +291,7 @@ export default function AccountScreen({navigation}: Props) {
 
             <View style={s.menuCard}>
               <MenuRow icon="log-out" iconBg="#FFEBEE" iconColor={COLORS.danger}
-                label="Log out" danger onPress={logout} isLast />
+                label="Log out" danger onPress={() => setShowLogout(true)} isLast />
             </View>
 
             <Text style={s.version}>AlZahrani Logistics · v1.0.0</Text>
@@ -287,11 +356,13 @@ export default function AccountScreen({navigation}: Props) {
         {/* ══ ABOUT US TAB ══ */}
         {activeTab === 'about' && (
           <>
-            <Image
-              source={require('../images/latest-logo.png')}
-              style={s.aboutBanner}
-              resizeMode="cover"
-            />
+            <View style={s.aboutBannerWrap}>
+              <Image
+                source={require('../images/logo-no-background.png')}
+                style={s.aboutBanner}
+                resizeMode="contain"
+              />
+            </View>
 
             <View style={s.aboutCard}>
               <Text style={s.aboutSectionTitle}>About Us</Text>
@@ -414,14 +485,19 @@ const s = StyleSheet.create({
     borderBottomColor: '#E8E8E8',
   },
   tabItem: {
-    flex: 1, flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'center', gap: 5, paddingVertical: 12, position: 'relative',
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    paddingVertical: 10,
+    position: 'relative',
   },
   tabItemActive: {},
-  tabLabel: {fontSize: 12, ...FONTS.medium, color: '#AAAAAA'},
+  tabLabel: {fontSize: 11, ...FONTS.medium, color: '#AAAAAA', textAlign: 'center'},
   tabLabelActive: {color: TEAL},
   tabUnderline: {
-    position: 'absolute', bottom: 0, left: 10, right: 10,
+    position: 'absolute', bottom: 0, left: 8, right: 8,
     height: 2.5, backgroundColor: TEAL, borderRadius: 2,
   },
 
@@ -523,8 +599,23 @@ const s = StyleSheet.create({
 
   // About banner
   aboutBanner: {
-    width: '100%', height: 180,
+    width: '100%',
+    height: 200,
     marginBottom: 14,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  aboutBannerWrap: {
+    marginHorizontal: 16,
+    marginBottom: 14,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: {width: 0, height: 2},
+    backgroundColor: '#F0F0F0',
   },
 
   // About card
@@ -567,4 +658,83 @@ const s = StyleSheet.create({
   },
   mvTitle: {fontSize: 14, ...FONTS.bold, color: COLORS.textPrimary, marginBottom: 6},
   mvBody: {fontSize: 12, ...FONTS.regular, color: COLORS.textSecondary, lineHeight: 18},
+});
+
+// ─── Logout modal styles ───────────────────────────────────────────────────────
+const lm = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  card: {
+    width: '100%',
+    backgroundColor: COLORS.white,
+    borderRadius: 24,
+    paddingTop: 32,
+    paddingBottom: 0,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    shadowOffset: {width: 0, height: 8},
+  },
+  iconWrap: {
+    width: 68, height: 68, borderRadius: 34,
+    backgroundColor: '#FFF0F0',
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 18,
+  },
+  title: {
+    fontSize: 20,
+    ...FONTS.bold,
+    color: COLORS.textPrimary,
+    marginBottom: 10,
+  },
+  body: {
+    fontSize: 13,
+    ...FONTS.regular,
+    color: COLORS.mediumGray,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 28,
+  },
+  divider: {
+    width: '100%',
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#EEEEEE',
+  },
+  btnRow: {
+    flexDirection: 'row',
+    width: '100%',
+  },
+  btn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 16,
+  },
+  cancelBtn: {},
+  confirmBtn: {},
+  btnSep: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: '#EEEEEE',
+    marginVertical: 10,
+  },
+  cancelTxt: {
+    fontSize: 15,
+    ...FONTS.medium,
+    color: COLORS.textSecondary,
+  },
+  confirmTxt: {
+    fontSize: 15,
+    ...FONTS.bold,
+    color: COLORS.danger,
+  },
 });

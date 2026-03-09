@@ -3,13 +3,17 @@ import {StatusBar} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {NavigationContainer} from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
-import {COLORS} from './src/theme/colors';
 import {ToastRoot} from './src/components/Toast';
 
 function App(): React.JSX.Element {
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.brandDark} />
+      {/* Transparent — each screen manages its own StatusBar appearance */}
+      <StatusBar
+        translucent
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
       <NavigationContainer>
         <AppNavigator />
       </NavigationContainer>

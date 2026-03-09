@@ -15,42 +15,26 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {COLORS} from '../theme/colors';
 import {FONTS} from '../theme/typography';
 import type {RootStackParamList} from '../navigation/types';
+import BrandLogo from '../components/BrandLogo';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const CARD_W = Math.floor((SCREEN_WIDTH - 32 - 12) / 2);
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const BANNER_SLIDES = [
+type BannerSlide = {
+  id: string;
+  localImage: ReturnType<typeof require>;
+};
+
+const BANNER_SLIDES: BannerSlide[] = [
   {
     id: 'b1',
-    badge: 'FREE DELIVERY',
-    badgeBg: '#E53935',
-    title: 'Get FREE DELIVERY\non your first order',
-    sub: 'under 7 km',
-    bgColor: '#FEE8DC',
-    image:
-      'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=300&q=80',
+    localImage: require('../images/banner-two.png'),
   },
   {
     id: 'b2',
-    badge: '50% OFF',
-    badgeBg: '#2E7D32',
-    title: 'Up to 50% Off\non weekend specials',
-    sub: 'limited time offer',
-    bgColor: '#E8F5E9',
-    image:
-      'https://images.unsplash.com/photo-1565299507177-b0ac66763828?auto=format&fit=crop&w=300&q=80',
-  },
-  {
-    id: 'b3',
-    badge: 'NEW',
-    badgeBg: '#1565C0',
-    title: 'Premium Grills\nnow available',
-    sub: 'order before 10 PM',
-    bgColor: '#E3F2FD',
-    image:
-      'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=300&q=80',
+    localImage: require('../images/banner-one.png'),
   },
 ];
 
@@ -297,32 +281,33 @@ function HomeScreen() {
     <View style={[styles.root, {paddingTop: insets.top}]}>
       {/* ── Fixed Header ── */}
       <View style={styles.header}>
-        {/* Row 1: Location + icons */}
+        {/* Row 1: Logo left | Location right */}
         <View style={styles.headerTopRow}>
+          {/* Left: Brand logo */}
+          <View style={styles.logoWrap}>
+            <BrandLogo noContainer showTag={false} />
+          </View>
+
+          {/* Divider */}
+          <View style={styles.headerDivider} />
+
+          {/* Right: Location */}
           <Pressable
             style={styles.locBtn}
             onPress={() => navigation.navigate('LocationSelect')}
             hitSlop={8}>
             <View style={styles.locIconWrap}>
-              <Lucide name="map-pin" size={15} color="#fff" />
+              <Lucide name="map-pin" size={13} color="#fff" />
             </View>
             <View style={styles.locTexts}>
               <Text style={styles.locLabel}>Delivering to</Text>
-              <Text style={styles.locName}>As Sulay, Riyadh</Text>
+              <Text style={styles.locName} numberOfLines={1}>As Sulay, Riyadh</Text>
             </View>
-            <Lucide name="chevron-down" size={16} color={COLORS.mediumGray} />
+            <Lucide name="chevron-down" size={13} color={COLORS.mediumGray} />
           </Pressable>
-          <View style={styles.headerIcons}>
-            <Pressable
-              style={styles.headerIconBtn}
-              onPress={() => navigation.navigate('Cart')}
-              hitSlop={8}>
-              <Lucide name="shopping-bag" size={20} color={COLORS.textPrimary} />
-            </Pressable>
-          </View>
         </View>
 
-        {/* Row 2: Search + map */}
+        {/* Row 2: Search + cart */}
         <View style={styles.searchRow}>
           <Pressable
             style={styles.search}
@@ -331,10 +316,10 @@ function HomeScreen() {
             <Text style={styles.searchHint}>Type of food, restaurant name...</Text>
           </Pressable>
           <Pressable
-            style={styles.mapBtn}
-            onPress={() => navigation.navigate('LocationSelect')}
+            style={styles.cartBtn}
+            onPress={() => navigation.navigate('Cart')}
             hitSlop={8}>
-            <Lucide name="map" size={22} color={COLORS.textPrimary} />
+            <Lucide name="shopping-bag" size={22} color={COLORS.textPrimary} />
           </Pressable>
         </View>
       </View>
@@ -348,7 +333,7 @@ function HomeScreen() {
         ]}>
 
       {/* ── Auto-play Banner Carousel ── */}
-      <View>
+      <View style={styles.bannerWrap}>
         <ScrollView
           ref={bannerRef}
           horizontal
@@ -356,39 +341,27 @@ function HomeScreen() {
           showsHorizontalScrollIndicator={false}
           onScrollBeginDrag={clearAutoPlay}
           onMomentumScrollEnd={e => {
-            const i = Math.round(
-              e.nativeEvent.contentOffset.x / SCREEN_WIDTH,
-            );
+            const i = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
             setBannerIdx(i);
             startAutoPlay();
           }}>
           {BANNER_SLIDES.map(slide => (
-            <View
-              key={slide.id}
-              style={[styles.bannerSlide, {backgroundColor: slide.bgColor}]}>
-              <View style={styles.bannerLeft}>
-                <View
-                  style={[
-                    styles.bannerBadge,
-                    {backgroundColor: slide.badgeBg},
-                  ]}>
-                  <Text style={styles.bannerBadgeTxt}>{slide.badge}</Text>
-                </View>
-                <Text style={styles.bannerTitle}>{slide.title}</Text>
-                <Text style={styles.bannerSub}>{slide.sub}</Text>
-              </View>
-              <Image source={{uri: slide.image}} style={styles.bannerImg} />
+            <View key={slide.id} style={styles.bannerSlide}>
+              <Image
+                source={slide.localImage}
+                style={styles.bannerImg}
+                resizeMode="cover"
+              />
             </View>
           ))}
         </ScrollView>
+
+        {/* Dots overlaid on banner bottom */}
         <View style={styles.bannerDots}>
           {BANNER_SLIDES.map((_, i) => (
             <View
               key={i}
-              style={[
-                styles.dot,
-                i === bannerIdx ? styles.dotOn : styles.dotOff,
-              ]}
+              style={[styles.dot, i === bannerIdx ? styles.dotOn : styles.dotOff]}
             />
           ))}
         </View>
@@ -665,36 +638,53 @@ const styles = StyleSheet.create({
   headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 10,
   },
-  locBtn: {
+  // Left: logo
+  logoWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    flexShrink: 0,
+  },
+  // Subtle vertical divider between logo and location
+  headerDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: '#E5E5E5',
+    flexShrink: 0,
+  },
+  // Right: location
+  locBtn: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 6,
   },
   locIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#2EA87E',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   locTexts: {
-    flex: 1,
+    flexShrink: 1,
+    alignItems: 'flex-end',
   },
   locLabel: {
-    fontSize: 11,
+    fontSize: 10,
     ...FONTS.regular,
     color: COLORS.mediumGray,
-    lineHeight: 14,
+    lineHeight: 13,
   },
   locName: {
-    fontSize: 16,
+    fontSize: 14,
     ...FONTS.bold,
     color: COLORS.textPrimary,
-    lineHeight: 20,
+    lineHeight: 18,
   },
   headerIcons: {
     flexDirection: 'row',
@@ -702,12 +692,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   headerIconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#F3F3F3',
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+  },
+  // Cart button in search row
+  cartBtn: {
+    width: 46,
+    height: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   avatar: {
     width: 38,
@@ -752,7 +751,6 @@ const styles = StyleSheet.create({
 
   // Legacy unused (kept to avoid ref errors)
   locSub: {fontSize: 1},
-  headerRight: {flexDirection: 'row'},
   searchWrap: {height: 0, overflow: 'hidden'},
   vegToggle: {height: 0},
   vegLabel: {
@@ -771,56 +769,31 @@ const styles = StyleSheet.create({
   },
 
   // Banner
+  bannerWrap: {
+    position: 'relative',
+  },
   bannerSlide: {
     width: SCREEN_WIDTH,
-    height: 160,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  bannerLeft: {flex: 1, paddingRight: 8},
-  bannerBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginBottom: 8,
-  },
-  bannerBadgeTxt: {
-    color: '#fff',
-    fontSize: 11,
-    ...FONTS.bold,
-    letterSpacing: 0.5,
-  },
-  bannerTitle: {
-    fontSize: 16,
-    ...FONTS.bold,
-    color: '#111',
-    lineHeight: 22,
-  },
-  bannerSub: {
-    fontSize: 12,
-    ...FONTS.regular,
-    color: '#555',
-    marginTop: 4,
+    height: 180,
   },
   bannerImg: {
-    width: 120,
-    height: 120,
-    borderRadius: 12,
+    width: '100%',
+    height: '100%',
+    borderRadius: 0,
   },
   bannerDots: {
+    position: 'absolute',
+    bottom: 10,
+    alignSelf: 'center',
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 8,
     gap: 5,
-    backgroundColor: COLORS.white,
   },
   dot: {height: 5, borderRadius: 3},
-  dotOn: {width: 18, backgroundColor: COLORS.textPrimary},
-  dotOff: {width: 5, backgroundColor: '#CCC'},
+  dotOn: {width: 18, backgroundColor: '#fff'},
+  dotOff: {width: 5, backgroundColor: 'rgba(255,255,255,0.5)'},
 
   // Categories
   catRow: {
